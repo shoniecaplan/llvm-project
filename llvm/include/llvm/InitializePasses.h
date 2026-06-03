@@ -215,6 +215,7 @@ LLVM_ABI void initializeMachineModuleInfoWrapperPassPass(PassRegistry &);
 LLVM_ABI void
 initializeMachineOptimizationRemarkEmitterPassPass(PassRegistry &);
 LLVM_ABI void initializeMachineOutlinerPass(PassRegistry &);
+void initializeSimilarSequenceDetectorPass(PassRegistry&);
 LLVM_ABI void initializeStaticDataProfileInfoWrapperPassPass(PassRegistry &);
 LLVM_ABI void initializeStaticDataAnnotatorPass(PassRegistry &);
 LLVM_ABI void initializeMachinePipelinerPass(PassRegistry &);

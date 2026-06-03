@@ -545,6 +545,8 @@ LLVM_ABI ModulePass *createGlobalMergeFuncPass();
 /// printing assembly.
 LLVM_ABI ModulePass *createMachineOutlinerPass(RunOutliner RunOutlinerMode);
 
+FunctionPass *createSimilarSequenceDetectorPass();
+
 /// This pass expands the reduction intrinsics into sequences of shuffles.
 LLVM_ABI FunctionPass *createExpandReductionsPass();
 
