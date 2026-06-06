@@ -373,6 +373,7 @@ struct SimilarSequenceDetector : public ModulePass {
              << " | occurrences=" << G.Occurrences.size()
              << (Exact ? " | EXACT" : " | DIFFERENTIAL") << " ===\n";
 
+#ifndef NO_PRINT_CANDIDATE_GROUP
       for (unsigned I = 0; I < G.Occurrences.size(); ++I) {
         const Occurrence &Occ = G.Occurrences[I];
         errs() << "  [" << I << "] "
@@ -397,6 +398,7 @@ struct SimilarSequenceDetector : public ModulePass {
         }
       }
       errs() << "\n";
+#endif // NO_PRINT_CANDIDATE_GROUP
     }
 
     errs() << "[SSD] " << PrintedGroups << " maximal groups ("
