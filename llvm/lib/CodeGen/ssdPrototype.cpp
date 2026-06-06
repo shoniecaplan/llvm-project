@@ -32,6 +32,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 namespace llvm {
@@ -41,7 +42,7 @@ void initializeSimilarSequenceDetectorPass(PassRegistry &);
 
 using namespace llvm;
 
-static constexpr unsigned MinSequenceLen = 5;
+static constexpr unsigned MinSequenceLen = 4;
 
 //===----------------------------------------------------------------------===//
 // Types
@@ -328,9 +329,41 @@ struct SimilarSequenceDetector : public ModulePass {
       }
     }
 
+    // --- Maximality filter ---
+    // Remove group G if every one of its occurrences (MBB, StartIndex) is
+    // also covered by a strictly longer group G2 whose occurrence starts at
+    // the same position. Such a G is a strict prefix of G2 and adds no
+    // information beyond what G2 already reports.
+    //
+    // Build a set of (MBB, start) pairs covered by each group for fast lookup.
+    using OccKey = std::pair<const MachineBasicBlock *, unsigned>;
+    std::vector<std::set<OccKey>> OccSets(Groups.size());
+    for (unsigned I = 0; I < Groups.size(); ++I)
+      for (const Occurrence &O : Groups[I].Occurrences)
+        OccSets[I].insert({O.MBB, O.StartIndex});
+
+    std::vector<bool> Suppress(Groups.size(), false);
+    for (unsigned I = 0; I < Groups.size(); ++I) {
+      if (Suppress[I]) continue;
+      for (unsigned J = 0; J < Groups.size(); ++J) {
+        if (I == J || Suppress[J]) continue;
+        if (Groups[J].Len <= Groups[I].Len) continue;
+        // Check if every occurrence of I is present in J at the same position.
+        bool AllCovered = true;
+        for (const OccKey &K : OccSets[I]) {
+          if (!OccSets[J].count(K)) { AllCovered = false; break; }
+        }
+        if (AllCovered) { Suppress[I] = true; break; }
+      }
+    }
+
     // --- Print results ---
     unsigned ExactGroups = 0;
-    for (const CandidateGroup &G : Groups) {
+    unsigned PrintedGroups = 0;
+    for (unsigned GI = 0; GI < Groups.size(); ++GI) {
+      if (Suppress[GI]) continue;
+      const CandidateGroup &G = Groups[GI];
+      ++PrintedGroups;
       bool Exact = true;
       for (unsigned I = 1; I < G.Occurrences.size(); ++I)
         if (!G.Occurrences[I].Diffs.empty()) { Exact = false; break; }
@@ -366,9 +399,9 @@ struct SimilarSequenceDetector : public ModulePass {
       errs() << "\n";
     }
 
-    errs() << "[SSD] " << Groups.size() << " groups ("
+    errs() << "[SSD] " << PrintedGroups << " maximal groups ("
            << ExactGroups << " exact, "
-           << (Groups.size() - ExactGroups) << " differential).\n";
+           << (PrintedGroups - ExactGroups) << " differential).\n";
 
     return false;
   }
