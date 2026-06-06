@@ -29,6 +29,7 @@ class MachineFunction;
 class MachineFunctionPass;
 class ModulePass;
 class Pass;
+class PassRegistry;
 class TargetMachine;
 class raw_ostream;
 enum class RunOutliner;
@@ -545,7 +546,8 @@ LLVM_ABI ModulePass *createGlobalMergeFuncPass();
 /// printing assembly.
 LLVM_ABI ModulePass *createMachineOutlinerPass(RunOutliner RunOutlinerMode);
 
-FunctionPass *createSimilarSequenceDetectorPass();
+LLVM_ABI ModulePass *createSimilarSequenceDetectorPass();
+LLVM_ABI void initializeSimilarSequenceDetectorPass(PassRegistry &);
 
 /// This pass expands the reduction intrinsics into sequences of shuffles.
 LLVM_ABI FunctionPass *createExpandReductionsPass();
